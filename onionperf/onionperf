@@ -145,20 +145,20 @@ def main():
         action="store", dest="tgenpath",
         default=util.which("tgen"))
 
-    measure_parser.add_argument('--client-bridge-lines',
-        help="""Configuration file for the Tor client, which may include bridges""",
+    measure_parser.add_argument('--client-config-lines',
+        help="""Additional configuration lines for the Tor client, for example bridge lines""",
         metavar="CONFIG", type=str,
         action="store", dest="bridge_lines",
         default="")
 
     measure_parser.add_argument('--torclient-conf-file',
-        help="""Configuration file for the Tor client, which may include bridges""",
+        help="""Configuration file for the Tor client""",
         metavar="CONFIG", type=str,
         action="store", dest="torclient_conf_file",
         default="")
 
     measure_parser.add_argument('--torserver-conf-file',
-        help="""Configuration file for the Tor server, which may include bridges""",
+        help="""Configuration file for the Tor server""",
         metavar="CONFIG", type=str,
         action="store", dest="torserver_conf_file",
         default="")

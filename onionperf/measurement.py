@@ -162,11 +162,13 @@ def logrotate_thread_task(writables, tgen_writable, torctl_writable, docroot, ni
 
 class Measurement(object):
 
-    def __init__(self, tor_bin_path, tgen_bin_path, datadir_path, nickname, bridge_lines=None):
+    def __init__(self, tor_bin_path, tgen_bin_path, datadir_path, nickname, torclient_conf_file=None, torserver_conf_file=None, bridge_lines=None):
         self.tor_bin_path = tor_bin_path
         self.tgen_bin_path = tgen_bin_path
         self.datadir_path = datadir_path
-        self.bridge_lines=bridge_lines
+        self.torclient_conf_file = torclient_conf_file
+        self.torserver_conf_file = torserver_conf_file
+        self.bridge_lines = bridge_lines
         self.nickname = nickname
         self.threads = None
         self.done_event = None
@@ -326,18 +328,27 @@ class Measurement(object):
         logging.info("Starting Tor {0} process with ControlPort={1}, SocksPort={2}...".format(name, control_port, socks_port))
 
         tor_datadir = "{0}/tor-{1}".format(self.datadir_path, name)
-        bridge_lines=self.bridge_lines
+        torclient_conf_file = self.torclient_conf_file
+        torserver_conf_file = self.torserver_conf_file
+        bridge_lines = self.bridge_lines
 
         if not os.path.exists(tor_datadir): os.makedirs(tor_datadir)
 
         base_config_template = "ORPort 0\nDirPort 0\nControlPort {0}\nSocksPort {1}\nClientOnly 1\nSafeLogging 0\nMaxCircuitDirtiness 60 seconds\nDataDirectory {2}\nLog INFO stdout\n".format(control_port, socks_port, tor_datadir)
 
-        if not bridge_lines:
+        if not torclient_conf_file and not bridge_lines:
             tor_config_client = base_config_template + "UseEntryGuards 0"
         else:
             tor_config_client = base_config_template + bridge_lines
+            if torclient_conf_file:
+                with open(torclient_conf_file, 'r') as f:
+                    tor_config_client += f.read()
 
-        tor_config_server = base_config_template + "UseEntryGuards 0"
+        if torserver_conf_file:
+            with open(torserver_conf_file, 'r') as f:
+                tor_config_server = base_config_template + f.read()
+        else:
+            tor_config_server = base_config_template + "UseEntryGuards 0"
 
         if name == 'client':
             tor_config = tor_config_client

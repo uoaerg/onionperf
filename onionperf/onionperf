@@ -145,10 +145,22 @@ def main():
         action="store", dest="tgenpath",
         default=util.which("tgen"))
 
-    measure_parser.add_argument('--client-bridge-lines',
-        help="""Configuration file for the Tor client, which may include bridges""",
+    measure_parser.add_argument('--client-config-lines',
+        help="""Additional configuration lines for the Tor client, for example bridge lines""",
         metavar="CONFIG", type=str,
         action="store", dest="bridge_lines",
+        default="")
+
+    measure_parser.add_argument('--torclient-conf-file',
+        help="""Configuration file for the Tor client""",
+        metavar="CONFIG", type=str,
+        action="store", dest="torclient_conf_file",
+        default="")
+
+    measure_parser.add_argument('--torserver-conf-file',
+        help="""Configuration file for the Tor server""",
+        metavar="CONFIG", type=str,
+        action="store", dest="torserver_conf_file",
         default="")
 
     measure_parser.add_argument('--tgen-connect-ip',
@@ -369,7 +381,7 @@ def measure(args):
         server_tor_ctl_port = util.get_random_free_port()
         server_tor_socks_port = util.get_random_free_port()
 
-        meas = Measurement(args.torpath, args.tgenpath, args.prefix, args.nickname, args.bridge_lines)
+        meas = Measurement(args.torpath, args.tgenpath, args.prefix, args.nickname, args.torclient_conf_file, args.torserver_conf_file, args.bridge_lines)
         meas.run(do_onion=args.do_onion, do_inet=args.do_inet,
              client_tgen_listen_port=client_tgen_port, client_tgen_connect_ip=client_connect_ip, client_tgen_connect_port=client_connect_port, client_tor_ctl_port=client_tor_ctl_port, client_tor_socks_port=client_tor_socks_port,
              server_tgen_listen_port=server_tgen_port, server_tor_ctl_port=server_tor_ctl_port, server_tor_socks_port=server_tor_socks_port)

@@ -145,6 +145,12 @@ def main():
         action="store", dest="tgenpath",
         default=util.which("tgen"))
 
+    measure_parser.add_argument('--client-bridge-lines',
+        help="""Configuration file for the Tor client, which may include bridges""",
+        metavar="CONFIG", type=str,
+        action="store", dest="bridge_lines",
+        default="")
+
     measure_parser.add_argument('--tgen-connect-ip',
         help="""the TGen client connect IP address ADDR, or 0.0.0.0 to do an external IP lookup; must be Internet-accessible for non-onion downloads to work""",
         metavar="ADDR", type=type_str_ip_in,
@@ -363,7 +369,7 @@ def measure(args):
         server_tor_ctl_port = util.get_random_free_port()
         server_tor_socks_port = util.get_random_free_port()
 
-        meas = Measurement(args.torpath, args.tgenpath, args.prefix, args.nickname)
+        meas = Measurement(args.torpath, args.tgenpath, args.prefix, args.nickname, args.bridge_lines)
         meas.run(do_onion=args.do_onion, do_inet=args.do_inet,
              client_tgen_listen_port=client_tgen_port, client_tgen_connect_ip=client_connect_ip, client_tgen_connect_port=client_connect_port, client_tor_ctl_port=client_tor_ctl_port, client_tor_socks_port=client_tor_socks_port,
              server_tgen_listen_port=server_tgen_port, server_tor_ctl_port=server_tor_ctl_port, server_tor_socks_port=server_tor_socks_port)

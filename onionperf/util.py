@@ -1,7 +1,9 @@
 '''
   OnionPerf
   Authored by Rob Jansen, 2015
+  Documentation by Ana Custura 2019
   See LICENSE for licensing information
+
 '''
 
 import sys, os, socket, logging, random, re, shutil, datetime, urllib
@@ -13,11 +15,29 @@ from abc import ABCMeta, abstractmethod
 LINEFORMATS = "k-,r-,b-,g-,c-,m-,y-,k--,r--,b--,g--,c--,m--,y--,k:,r:,b:,g:,c:,m:,y:,k-.,r-.,b-.,g-.,c-.,m-.,y-."
 
 def make_dir_path(path):
+    '''
+    This function creates a directory if it does not exist, expanding the path as required.
+
+    :param path: Path to create
+    :type path: string
+    
+    '''
     p = os.path.abspath(os.path.expanduser(path))
     if not os.path.exists(p):
         os.makedirs(p)
 
 def find_file_paths(searchpath, patterns):
+    '''
+    This function recursively searches a path for filenames matching a given set of patterns.
+
+    :param searchpath: Path to search
+    :type searchpath: string
+    :param patterns: Name patterns to search for
+    :type patters: string
+
+    :returns: list
+    '''
+
     paths = []
     if searchpath.endswith("/-"): paths.append("-")
     else:
@@ -32,6 +52,20 @@ def find_file_paths(searchpath, patterns):
     return paths
 
 def find_file_paths_pairs(searchpath, patterns_a, patterns_b):
+    '''
+    This function recursively searches a path for filenames matching two sets of given patterns.
+
+    :param searchpath: Path to search
+    :type searchpath: string
+    :param patterns_a: First set of name patterns to search for
+    :type patters: string
+    :param patterns_b: Second set of name patterns to search for
+    :type patters: string
+
+    :returns: list
+    '''
+
+
     paths = []
     for root, dirs, files in os.walk(searchpath):
         for name in files:
@@ -59,7 +93,17 @@ def find_file_paths_pairs(searchpath, patterns_a, patterns_b):
     return paths
 
 def find_path(binpath, defaultname):
-    # find the path to tor
+    '''
+    This function finds and returns the path to a named binary.
+
+    :param binpath: Path to the binary
+    :type binpath: string
+    :param defaultname: Name of the binary
+    :type patters: string
+
+    :returns: string
+    '''
+
     if binpath is not None:
         binpath = os.path.abspath(os.path.expanduser(binpath))
     else:
@@ -79,6 +123,14 @@ def find_path(binpath, defaultname):
     return binpath
 
 def which(program):
+    '''
+    This function finds the path to a Program.
+
+    :param program: Program to search for
+    :type program: string
+
+    :returns: string if a path was found or None otherwise
+    '''
     def is_exe(fpath):
         return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
     fpath, fname = os.path.split(program)
@@ -93,15 +145,43 @@ def which(program):
     return None
 
 def timestamp_to_seconds(stamp):  # unix timestamp
+    '''
+    This function transforms an unix timestamp to seconds.
+
+    :param timestamp: Unix timestamp in string format
+    :type timestamp: string
+
+    :returns: float
+    '''
+ 
     return float(stamp)
 
 def date_to_string(date_object):
+    '''
+    This function transforms a date object to a string
+
+    :param date_object: Date object to be converted
+    :type date_object: datetime
+
+    :returns: string
+    '''
+ 
     if date_object is not None:
         return "{:04d}-{:02d}-{:02d}".format(date_object.year, date_object.month, date_object.day)
     else:
         return ""
 
 def do_dates_match(date1, date2):
+    ''' Compares two date objects to see if they match on year, month and day
+ 
+    :param date1: First date object 
+    :type date1: datetime
+    :param date2: Second date object 
+    :type date2: datetime
+ 
+    :returns: bool
+    '''
+
     year_matches = True if date1.year == date2.year else False
     month_matches = True if date1.month == date2.month else False
     day_matches = True if date1.day == date2.day else False
@@ -111,6 +191,10 @@ def do_dates_match(date1, date2):
         return False
 
 def get_ip_address():
+    ''' Returns the IP address of the host.
+    This could be ported to python-ipaddress or pyroute2 when moving codebase to Python 3.
+    :returns: string
+    '''
     ip_address = None
 
     data = urllib.urlopen('https://check.torproject.org/').read()
@@ -128,6 +212,11 @@ def get_ip_address():
     return ip_address
 
 def get_random_free_port():
+    ''' Picks a random high port and returns it if available.
+ 
+    :returns: int
+    '''
+
     while True:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         port = random.randint(10000, 60000)
@@ -137,7 +226,18 @@ def get_random_free_port():
             return port
 
 class DataSource(object):
+    '''Class which models all data sources which can be used for onionperf analysis.
+    Handles: simple files, compressed files and stdin input.
+    '''
     def __init__(self, filename, compress=False):
+        '''Initializes data source
+
+        :param filename: File name of 
+
+        :value filename:
+        :param compress: 
+        :value compress:
+
         self.filename = filename
         self.compress = compress
         self.source = None
@@ -172,11 +272,13 @@ class DataSource(object):
         return self.source
 
     def close(self):
+        '''Closes file or waits for xz process to finish or else does nothing'''
         if self.source is not None: self.source.close()
         if self.xzproc is not None: self.xzproc.wait()
 
 
 class Writable(object):
+    '''Abstract class for modelling writables'''
     __metaclass__ = ABCMeta
 
     @abstractmethod
@@ -188,6 +290,7 @@ class Writable(object):
         pass
 
 class FileWritable(Writable):
+    '''Implements the abstract Writable class writable files'''
 
     def __init__(self, filename, do_compress=False, do_truncate=False):
         self.filename = filename

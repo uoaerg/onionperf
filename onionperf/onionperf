@@ -163,12 +163,12 @@ def main():
         action="store", dest="tgenconnectport",
         default=8080)
 
-    measure_parser.add_argument('-i', '--no-inet',
+    measure_parser.add_argument('-i', '--onion-only',
         help="""disable measuring download times over Tor back to {0}""".format(hostname),
         action="store_false", dest="do_inet",
         default=True)
 
-    measure_parser.add_argument('-o', '--no-onion',
+    measure_parser.add_argument('-o', '--inet-only',
         help="""disable measuring download times over Tor to an ephemeral onion service""",
         action="store_false", dest="do_onion",
         default=True)

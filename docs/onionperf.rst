@@ -1,3 +1,6 @@
+Onionperf is structured around 4 main components: measurement, analysis, monitoring and visualisation.
+Alongside this, it provides utilities and tgen graph modelling functions.
+
 util
 =========
 

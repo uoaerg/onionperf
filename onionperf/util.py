@@ -1,7 +1,10 @@
 '''
   OnionPerf
+
   Authored by Rob Jansen, 2015
+
   Documentation by Ana Custura 2019
+
   See LICENSE for licensing information
 
 '''
@@ -99,7 +102,7 @@ def find_path(binpath, defaultname):
     :param binpath: Path to the binary
     :type binpath: string
     :param defaultname: Name of the binary
-    :type patters: string
+    :type defaultname: string
 
     :returns: string
     '''
@@ -227,16 +230,17 @@ def get_random_free_port():
 
 class DataSource(object):
     '''Class which models all data sources which can be used for onionperf analysis.
-    Handles: simple files, compressed files and stdin input.
+    Handles: simple files, xz compressed files and stdin input.
     '''
     def __init__(self, filename, compress=False):
-        '''Initializes data source
+        '''Initializes data source.
 
-        :param filename: File name of 
+        :param filename: File name of data source 
+        :type filename: string
+        :param compress: Whether or not the file is compressed 
+        :type compress: bool
 
-        :value filename:
-        :param compress: 
-        :value compress:
+        '''
 
         self.filename = filename
         self.compress = compress
@@ -244,17 +248,26 @@ class DataSource(object):
         self.xzproc = None
 
     def __iter__(self):
+
         if self.source is None:
             self.open()
         return self.source
 
     def next(self):
+        '''
+        Gets the next block of the data source.   
+      
+        '''
         return self.__next__()
 
     def __next__(self):  # python 3
         return self.source.next() if self.source is not None else None
 
     def open(self):
+        '''
+        Handles data source logic and sets the data source.
+
+        '''
         if self.source is None:
             if self.filename == '-':
                 self.source = sys.stdin
@@ -267,12 +280,18 @@ class DataSource(object):
                 self.source = open(self.filename, 'r')
 
     def get_file_handle(self):
+        '''Returns data source, calling open() to set it if not set.
+ 
+        :returns: file 
+        '''
         if self.source is None:
             self.open()
         return self.source
 
     def close(self):
-        '''Closes file or waits for xz process to finish or else does nothing'''
+        '''Closes the data source and waits for xz process to finish.
+
+        '''
         if self.source is not None: self.source.close()
         if self.xzproc is not None: self.xzproc.wait()
 
@@ -283,16 +302,27 @@ class Writable(object):
 
     @abstractmethod
     def write(self, msg):
+        '''Writes a message to writable'''
         pass
 
     @abstractmethod
     def close(self):
+        '''Cleanly closes writable'''
         pass
 
 class FileWritable(Writable):
-    '''Implements the abstract Writable class writable files'''
+    '''Implements the abstract Writable class for writable files'''
 
     def __init__(self, filename, do_compress=False, do_truncate=False):
+        '''Initializes writable files
+    
+        :param filename: Name of file writable
+        :type filename: string
+        :param do_compress: Whether to compress the file 
+        :type do_compress: bool
+        :param do_truncate: Whether to truncate the file 
+        :type do_truncate: bool
+        '''
         self.filename = filename
         self.do_compress = do_compress
         self.do_truncate = do_truncate
@@ -309,12 +339,18 @@ class FileWritable(Writable):
                 self.filename += ".xz"
 
     def write(self, msg):
+        '''Writes a message to the file writable
+
+        :param msg: Message to write
+        :type msg: string
+        '''
         self.lock.acquire()
         if self.file is None: self.__open_nolock()
         if self.file is not None: self.file.write(msg)
         self.lock.release()
 
     def open(self):
+        '''Opens file writable'''
         self.lock.acquire()
         self.__open_nolock()
         self.lock.release()
@@ -331,6 +367,7 @@ class FileWritable(Writable):
             self.file = open(self.filename, 'w' if self.do_truncate else 'a', 0)
 
     def close(self):
+        '''Closes file writable'''
         self.lock.acquire()
         self.__close_nolock()
         self.lock.release()
@@ -347,6 +384,13 @@ class FileWritable(Writable):
             self.ddproc = None
 
     def rotate_file(self, filename_datetime=datetime.datetime.now()):
+        '''Rotates file writable and returns filename used for rotation.
+           It closes and moves the old file and opens a new file at the original location.
+
+        :param filename_datetime: Date to use for filename rotation
+        :type filename_datetime: datetime
+
+        '''
         self.lock.acquire()
 
         # build up the new filename with an embedded timestamp
@@ -370,15 +414,27 @@ class FileWritable(Writable):
         return new_filename
 
 class MemoryWritable(Writable):
+    '''Implements the Writable class for memory buffers
+    '''
 
     def __init__(self):
-        self.str_buffer = StringIO()
+        self.str_buffer = stringIO()
 
     def write(self, msg):
+        '''Writes a message to the memory buffer
+
+        :param msg: Message to write
+        :type msg: string
+        '''
         self.str_buffer.write()
 
     def readline(self):
+        '''Returns a line from the buffer
+
+        :returns: string
+        '''
         return self.str_buffer.readline()
 
     def close(self):
+        '''Closes memory buffer'''
         self.str_buffer.close()

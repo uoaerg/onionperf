@@ -20,7 +20,8 @@ from stem.response import ControlMessage, convert
 import util
 
 class Analysis(object):
-
+    '''Class to model an analysis object
+    '''
     def __init__(self, nickname=None, ip_address=None):
         self.nickname = nickname
         self.measurement_ip = ip_address
@@ -32,15 +33,23 @@ class Analysis(object):
         self.did_analysis = False
 
     def add_tgen_file(self, filepath):
+        '''Appends a path to the lists of tgen log paths 
+        '''
         self.tgen_filepaths.append(filepath)
 
     def add_torctl_file(self, filepath):
+        '''Appends a path to the lists of tor log paths 
+        '''
         self.torctl_filepaths.append(filepath)
 
     def get_nodes(self):
+        '''Returns all nodes from the onionperf json data 
+        '''
         return self.json_db['data'].keys()
 
     def get_tor_bandwidth_summary(self, node, direction):
+        '''Returns tor bandwith summary from the onionperf data for a particular traffic direction
+        '''
         try:
             return self.json_db['data'][node]['tor']['bandwidth_summary'][direction]
         except:

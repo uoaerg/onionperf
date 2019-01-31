@@ -10,11 +10,17 @@ This documents the utils used by onionperf and mostly contains functionality aro
    :members:
    :undoc-members:
 
-analysis
-========
-
+model
+=====
 This documents the tgen model used by onionperf to conduct downloads.
 
 .. automodule:: onionperf.model
+   :members:
+   :undoc-members:
+
+analysis
+========
+
+.. automodule:: onionperf.analysis
    :members:
    :undoc-members:

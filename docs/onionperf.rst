@@ -1,6 +1,6 @@
 
 What is OnionPerf
-=========
+=================
 OnionPerf is a utility to track Tor and onion service performance.
 
 OnionPerf uses multiple processes and threads to download random data through
@@ -13,14 +13,14 @@ feed into Torperf, and can later be used to visualize changes in Tor client
 performance over time.
 
 Measurements
-=========
+============
 
 Deployment
-=========
+==========
 
 
 Onionperf Components
-============
+====================
 Onionperf is structured around 4 main components: measurement, analysis, monitoring and visualisation.
 Alongside this, it provides utilities and tgen graph modelling functions.
 

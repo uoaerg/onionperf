@@ -30,6 +30,8 @@ def find_file_paths(searchpath, patterns):
     '''
     This function recursively searches a path for filenames matching a given set of patterns.
 
+    .. deprecated:: 1.0.0 
+
     :param searchpath: Path to search
     :type searchpath: string
     :param patterns: Name patterns to search for
@@ -230,13 +232,6 @@ class DataSource(object):
     Handles: simple files, compressed files and stdin input.
     '''
     def __init__(self, filename, compress=False):
-        '''Initializes data source
-
-        :param filename: File name of 
-
-        :value filename:
-        :param compress: 
-        :value compress:
 
         self.filename = filename
         self.compress = compress
@@ -272,7 +267,9 @@ class DataSource(object):
         return self.source
 
     def close(self):
-        '''Closes file or waits for xz process to finish or else does nothing'''
+        """
+        Closes file or waits for xz process to finish or else does nothing
+        """
         if self.source is not None: self.source.close()
         if self.xzproc is not None: self.xzproc.wait()
 

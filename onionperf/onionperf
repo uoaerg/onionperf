@@ -145,7 +145,7 @@ def main():
         action="store", dest="tgenpath",
         default=util.which("tgen"))
 
-    measure_parser.add_argument('--client-config-lines',
+    measure_parser.add_argument('--client-additional-config',
         help="""Additional configuration lines for the Tor client, for example bridge lines""",
         metavar="CONFIG", type=str,
         action="store", dest="bridge_lines",

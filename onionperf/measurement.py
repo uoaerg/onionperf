@@ -303,7 +303,15 @@ class Measurement(object):
 
     def __start_tgen(self, name, tgen_port, socks_port=None, server_urls=None):
         logging.info("Starting TGen {0} process on port {1}...".format(name, tgen_port))
-
+        tgen_model_args = {
+                              tgen_port: "{0}".format(tgen_port), 
+                              tgen_servers: server_urls,
+                              socksproxy: "127.0.0.1:{0}".format(socks_port)
+                          }
+        if self.oneshot:
+            tgen_model = model.OneshotModel(**tgen_model_args)
+        else:
+            tgen_model = model.TorperfModel(**tgen_model_args)
         tgen_datadir = "{0}/tgen-{1}".format(self.datadir_path, name)
         if not os.path.exists(tgen_datadir): os.makedirs(tgen_datadir)
 
@@ -312,10 +320,8 @@ class Measurement(object):
         if socks_port is None:
             model.ListenModel(tgen_port="{0}".format(tgen_port)).dump_to_file(tgen_confpath)
             logging.info("TGen server running at 0.0.0.0:{0}".format(tgen_port))
-        elif self.oneshot:
-            model.OneshotModel(tgen_port="{0}".format(tgen_port), tgen_servers=server_urls, socksproxy="127.0.0.1:{0}".format(socks_port)).dump_to_file(tgen_confpath)
         else:
-            model.TorperfModel(tgen_port="{0}".format(tgen_port), tgen_servers=server_urls, socksproxy="127.0.0.1:{0}".format(socks_port)).dump_to_file(tgen_confpath)
+            tgen_model.dump_to_file(tgen_confpath)
 
         tgen_logpath = "{0}/onionperf.tgen.log".format(tgen_datadir)
         tgen_writable = util.FileWritable(tgen_logpath)

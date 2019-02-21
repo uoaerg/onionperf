@@ -207,16 +207,20 @@ class Measurement(object):
             general_writables = []
             tgen_client_writable, torctl_client_writable = None, None
 
+            base_config = None
+            if "BASETORRC" in os.environ:
+                base_config = os.environ['BASETORRC']
+
             if do_onion or do_inet:
                 general_writables.append(self.__start_tgen_server(server_tgen_listen_port))
 
             if do_onion:
-                tor_writable, torctl_writable = self.__start_tor_server(server_tor_ctl_port, server_tor_socks_port, {client_tgen_connect_port:server_tgen_listen_port})
+                tor_writable, torctl_writable = self.__start_tor_server(server_tor_ctl_port, server_tor_socks_port, {client_tgen_connect_port:server_tgen_listen_port}, base_config=base_config)
                 general_writables.append(tor_writable)
                 general_writables.append(torctl_writable)
 
             if do_onion or do_inet:
-                tor_writable, torctl_client_writable = self.__start_tor_client(client_tor_ctl_port, client_tor_socks_port)
+                tor_writable, torctl_client_writable = self.__start_tor_client(client_tor_ctl_port, client_tor_socks_port, base_config=base_config)
                 general_writables.append(tor_writable)
 
             server_urls = []
@@ -325,19 +329,19 @@ class Measurement(object):
 
         return tgen_writable
 
-    def __start_tor_client(self, control_port, socks_port):
-        return self.__start_tor("client", control_port, socks_port)
+    def __start_tor_client(self, control_port, socks_port, base_config=None):
+        return self.__start_tor("client", control_port, socks_port, base_config)
 
-    def __start_tor_server(self, control_port, socks_port, hs_port_mapping):
-        return self.__start_tor("server", control_port, socks_port, hs_port_mapping)
+    def __start_tor_server(self, control_port, socks_port, hs_port_mapping, base_config=None):
+        return self.__start_tor("server", control_port, socks_port, hs_port_mapping, base_config)
 
-    def __start_tor(self, name, control_port, socks_port, hs_port_mapping=None):
+    def __start_tor(self, name, control_port, socks_port, hs_port_mapping=None, base_config=None):
         logging.info("Starting Tor {0} process with ControlPort={1}, SocksPort={2}...".format(name, control_port, socks_port))
 
         tor_datadir = "{0}/tor-{1}".format(self.datadir_path, name)
         if not os.path.exists(tor_datadir): os.makedirs(tor_datadir)
 
-        tor_config_template = "ORPort 0\nDirPort 0\nControlPort {0}\nSocksPort {1}\nSocksListenAddress 127.0.0.1\nClientOnly 1\n\
+        tor_config_template = base_config + "ORPort 0\nDirPort 0\nControlPort {0}\nSocksPort {1}\nSocksListenAddress 127.0.0.1\nClientOnly 1\n\
 WarnUnsafeSocks 0\nSafeLogging 0\nMaxCircuitDirtiness 60 seconds\nUseEntryGuards 0\nDataDirectory {2}\nLog INFO stdout\n"
         tor_config = tor_config_template.format(control_port, socks_port, tor_datadir)
 

@@ -109,7 +109,7 @@ class OneshotModel(GeneratableTGenModel):
         g.add_node("start", serverport=self.tgen_port, peers=server_str, loglevel="info", heartbeat="1 minute")
         if self.socksproxy is not None:
             g.node["start"]["socksproxy"] = self.socksproxy
-        g.add_node("transfer5m", type="get", protocol="tcp", size="5 MiB", timeout="15 seconds", stallout="10 seconds")
+        g.add_node("transfer5m", type="get", protocol="tcp", size="5 MiB", timeout="60 seconds", stallout="60 seconds")
 
         g.add_edge("start", "transfer5m")
         g.add_edge("transfer5m", "start")

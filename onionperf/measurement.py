@@ -67,7 +67,6 @@ def watchdog_thread_task(cmd, cwd, writable, done_ev, send_stdin, ready_search_s
         # sure that the subprocess is still alive and the master doesn't want us to quit
         while subp.poll() is None and done_ev.is_set() is False:
             try:
-                # collect lines until the queue is empty for a full second
                 line = stdout_q.get(True, 1)
                 writable.write(line)
             except Queue.Empty:
@@ -161,7 +160,7 @@ def logrotate_thread_task(writables, tgen_writable, torctl_writable, docroot, ni
 
 class Measurement(object):
 
-    def __init__(self, tor_bin_path, tgen_bin_path, datadir_path, nickname):
+    def __init__(self, tor_bin_path, tgen_bin_path, datadir_path, nickname, oneshot):
         self.tor_bin_path = tor_bin_path
         self.tgen_bin_path = tgen_bin_path
         self.datadir_path = datadir_path
@@ -316,24 +315,27 @@ class Measurement(object):
 
     def __start_tgen(self, name, tgen_port, socks_port=None, server_urls=None):
         logging.info("Starting TGen {0} process on port {1}...".format(name, tgen_port))
-        tgen_model_args = {
-                              tgen_port: "{0}".format(tgen_port), 
-                              tgen_servers: server_urls,
-                              socksproxy: "127.0.0.1:{0}".format(socks_port)
-                          }
-        if self.oneshot:
-            tgen_model = model.OneshotModel(**tgen_model_args)
-        else:
-            tgen_model = model.TorperfModel(**tgen_model_args)
         tgen_datadir = "{0}/tgen-{1}".format(self.datadir_path, name)
         if not os.path.exists(tgen_datadir): os.makedirs(tgen_datadir)
 
         tgen_confpath = "{0}/tgen.graphml.xml".format(tgen_datadir)
         if os.path.exists(tgen_confpath): os.remove(tgen_confpath)
+        
         if socks_port is None:
             model.ListenModel(tgen_port="{0}".format(tgen_port)).dump_to_file(tgen_confpath)
             logging.info("TGen server running at 0.0.0.0:{0}".format(tgen_port))
         else:
+
+            tgen_model_args = {
+                                  'tgen_port': "{0}".format(tgen_port), 
+                                  'tgen_servers': server_urls,
+                                  'socksproxy': "127.0.0.1:{0}".format(socks_port)
+                              }
+            if self.oneshot:
+                tgen_model = model.OneshotModel(**tgen_model_args)
+            else:
+                tgen_model = model.TorperfModel(**tgen_model_args)
+
             tgen_model.dump_to_file(tgen_confpath)
 
         tgen_logpath = "{0}/onionperf.tgen.log".format(tgen_datadir)

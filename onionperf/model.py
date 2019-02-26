@@ -106,7 +106,7 @@ class OneshotModel(GeneratableTGenModel):
         server_str = ','.join(self.tgen_servers)
         g = DiGraph()
 
-        g.add_node("start", serverport=self.tgen_port, peers=server_str, loglevel="info", heartbeat="1 minute")
+        g.add_node("start", serverport=self.tgen_port, peers=server_str, loglevel="info", heartbeat="10 minute")
         if self.socksproxy is not None:
             g.node["start"]["socksproxy"] = self.socksproxy
         g.add_node("transfer5m", type="get", protocol="tcp", size="5 MiB", timeout="60 seconds", stallout="60 seconds")

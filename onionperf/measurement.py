@@ -67,7 +67,6 @@ def watchdog_thread_task(cmd, cwd, writable, done_ev, send_stdin, ready_search_s
         # sure that the subprocess is still alive and the master doesn't want us to quit
         while subp.poll() is None and done_ev.is_set() is False:
             try:
-                # collect lines until the queue is empty for a full second
                 line = stdout_q.get(True, 1)
                 writable.write(line)
             except Queue.Empty:

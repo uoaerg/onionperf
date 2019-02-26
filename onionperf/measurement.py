@@ -329,13 +329,13 @@ class Measurement(object):
 
         return tgen_writable
 
-    def __start_tor_client(self, control_port, socks_port, base_config=None):
+    def __start_tor_client(self, control_port, socks_port, base_config=""):
         return self.__start_tor("client", control_port, socks_port, base_config)
 
-    def __start_tor_server(self, control_port, socks_port, hs_port_mapping, base_config=None):
+    def __start_tor_server(self, control_port, socks_port, hs_port_mapping, base_config=""):
         return self.__start_tor("server", control_port, socks_port, hs_port_mapping, base_config)
 
-    def __start_tor(self, name, control_port, socks_port, hs_port_mapping=None, base_config=None):
+    def __start_tor(self, name, control_port, socks_port, hs_port_mapping=None, base_config=""):
         logging.info("Starting Tor {0} process with ControlPort={1}, SocksPort={2}...".format(name, control_port, socks_port))
 
         tor_datadir = "{0}/tor-{1}".format(self.datadir_path, name)

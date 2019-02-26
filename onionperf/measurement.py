@@ -68,9 +68,8 @@ def watchdog_thread_task(cmd, cwd, writable, done_ev, send_stdin, ready_search_s
         while subp.poll() is None and done_ev.is_set() is False:
             try:
                 # collect lines until the queue is empty for a full second
-                while True:
-                    line = stdout_q.get(True, 1)
-                    writable.write(line)
+                line = stdout_q.get(True, 1)
+                writable.write(line)
             except Queue.Empty:
                 # the queue is empty and the get() timed out, recheck loop conditions
                 continue
@@ -166,6 +165,7 @@ class Measurement(object):
         self.tor_bin_path = tor_bin_path
         self.tgen_bin_path = tgen_bin_path
         self.datadir_path = datadir_path
+        self.oneshot = oneshot
         self.nickname = nickname
         self.threads = None
         self.done_event = None
@@ -240,9 +240,20 @@ class Measurement(object):
 
                 logging.info("Bootstrapping finished, entering heartbeat loop")
                 time.sleep(1)
+                logging.info("Onionperf is running in Oneshot mode. It will download a 5M file and shut down gracefully...")
                 while True:
                     # TODO add status update of some kind? maybe the number of files in the www directory?
                     # logging.info("Heartbeat: {0} downloads have completed successfully".format(self.__get_download_count(tgen_client_writable.filename)))
+                    if self.oneshot:
+                        downloads = 0
+                        while True:
+                            downloads = self.__get_download_count(tgen_client_writable.filename)
+                            if downloads >= 1:
+                               logging.info("Onionperf has downloaded a 5M file in oneshot mode, and will now shut down.")
+                               break
+                        else:
+                            continue
+                        break
 
                     if self.__is_alive():
                         logging.info("All helper processes seem to be alive :)")
@@ -305,7 +316,15 @@ class Measurement(object):
 
     def __start_tgen(self, name, tgen_port, socks_port=None, server_urls=None):
         logging.info("Starting TGen {0} process on port {1}...".format(name, tgen_port))
-
+        tgen_model_args = {
+                              tgen_port: "{0}".format(tgen_port), 
+                              tgen_servers: server_urls,
+                              socksproxy: "127.0.0.1:{0}".format(socks_port)
+                          }
+        if self.oneshot:
+            tgen_model = model.OneshotModel(**tgen_model_args)
+        else:
+            tgen_model = model.TorperfModel(**tgen_model_args)
         tgen_datadir = "{0}/tgen-{1}".format(self.datadir_path, name)
         if not os.path.exists(tgen_datadir): os.makedirs(tgen_datadir)
 
@@ -315,7 +334,7 @@ class Measurement(object):
             model.ListenModel(tgen_port="{0}".format(tgen_port)).dump_to_file(tgen_confpath)
             logging.info("TGen server running at 0.0.0.0:{0}".format(tgen_port))
         else:
-            model.TorperfModel(tgen_port="{0}".format(tgen_port), tgen_servers=server_urls, socksproxy="127.0.0.1:{0}".format(socks_port)).dump_to_file(tgen_confpath)
+            tgen_model.dump_to_file(tgen_confpath)
 
         tgen_logpath = "{0}/onionperf.tgen.log".format(tgen_datadir)
         tgen_writable = util.FileWritable(tgen_logpath)
@@ -341,7 +360,7 @@ class Measurement(object):
         tor_datadir = "{0}/tor-{1}".format(self.datadir_path, name)
         if not os.path.exists(tor_datadir): os.makedirs(tor_datadir)
 
-        tor_config_template = base_config + "ORPort 0\nDirPort 0\nControlPort {0}\nSocksPort {1}\nSocksListenAddress 127.0.0.1\nClientOnly 1\n\
+        tor_config_template = "RunAsDaemon 0\nORPort 0\nDirPort 0\nControlPort {0}\nSocksPort {1}\nSocksListenAddress 127.0.0.1\nClientOnly 1\n\
 WarnUnsafeSocks 0\nSafeLogging 0\nMaxCircuitDirtiness 60 seconds\nUseEntryGuards 0\nDataDirectory {2}\nLog INFO stdout\n"
         tor_config = tor_config_template.format(control_port, socks_port, tor_datadir)
 

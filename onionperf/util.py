@@ -9,6 +9,9 @@ from subprocess import Popen, PIPE, STDOUT
 from threading import Lock
 from cStringIO import StringIO
 from abc import ABCMeta, abstractmethod
+import netifaces
+import ipaddress
+
 
 LINEFORMATS = "k-,r-,b-,g-,c-,m-,y-,k--,r--,b--,g--,c--,m--,y--,k:,r:,b:,g:,c:,m:,y:,k-.,r-.,b-.,g-.,c-.,m-.,y-."
 
@@ -112,6 +115,14 @@ def do_dates_match(date1, date2):
 
 def get_ip_address():
     ip_address = None
+
+    for inf in netifaces.interfaces():
+	if netifaces.AF_INET in netifaces.ifaddresses(inf):
+	    for addr in netifaces.ifaddresses(inf)[netifaces.AF_INET]:
+		if 'addr' in addr:
+		    address = ipaddress.ip_address(addr['addr'])
+		    if not address.is_loopback and not address.is_link_local:
+			return address
 
     data = urllib.urlopen('https://check.torproject.org/').read()
     if data is not None and len(data) > 0:
